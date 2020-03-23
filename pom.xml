@@ -1,0 +1,125 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.jzz</groupId>
+  <artifactId>maventest</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>maventest</name>
+  <url>http://maven.apache.org</url>
+
+<properties>
+  	<java.version>1.8</java.version>
+    <spring.version>4.0.0.RELEASE</spring.version>
+    <!-- 编译时的编码 -->  
+    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.directory></project.build.directory>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+	  <groupId>org.jzz</groupId>
+      <artifactId>studyProj</artifactId>
+  	  <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+  
+   <build>
+   	<!-- 指定target目录，默认为target，建议不要修改！！因为gitignore文件也要跟着改！！忘了会出大事的 -->
+    <directory>target</directory>
+	<plugins>
+		<plugin>  
+			<groupId>org.apache.maven.plugins</groupId>  
+			<artifactId>maven-compiler-plugin</artifactId>  
+            <version>3.1</version>  
+            <configuration>  
+				<source>${java.version}</source>
+				<target>${java.version}</target>
+				<!-- 指定编码格式，否则在DOS下运行mvn compile命令时会出现莫名的错误，因为系统默认使用GBK编码 --> 
+				<encoding>${maven.compiler.encoding}</encoding>
+			</configuration>  
+		</plugin>
+		
+		<!-- 添加这个插件后会把所有依赖copy到指定文件夹中，请注意这个参数值！${project.build.directory} -->
+		<plugin>
+		    <groupId>org.apache.maven.plugins</groupId>
+		    <artifactId>maven-dependency-plugin</artifactId>
+		    <version>3.1.1</version>
+		    <executions>
+		        <execution>
+		            <id>copy-dependencies</id>
+		            <phase>package</phase>
+		            <goals>
+		                <goal>copy-dependencies</goal>
+		            </goals>
+		            <configuration>
+		                <outputDirectory>${project.build.directory}/libDir</outputDirectory>
+		            </configuration>
+		        </execution>
+		    </executions>
+		</plugin>
+		
+		<!-- 打出可执行jar包（大小约4KB，自动配置了manifest文件，包括依赖类和主类信息），
+			此插件需要配置依赖类的目录，一定要和上面的maven-dependency-plugin插件配合使用，否则manifest生成的依赖路径和实际第三方jar所在路径会不一致。
+			 通过“java -jar jarName”可执行，将其放到和libDir平级就可以正常运行，否则会提示找不到依赖 。
+		-->
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>  
+            <artifactId>maven-jar-plugin</artifactId>  
+            <version>2.6</version> 
+            <configuration>
+            	<archive>
+            		<manifest>
+            			<addClasspath>true</addClasspath>
+            			<!-- 此参数用于在manifest中生成依赖包的路径，尽量用相对路径否则换一台机器就惨了
+            				${project.build.directory}这个值是绝对路径：/Users/jiangzhengzhou/eclipse-workspace/maventest/targetDir
+            			所以下面这样配置就是给自己找麻烦：
+            			<classpathPrefix>${project.build.directory}/libDir</classpathPrefix>  -->
+            			<classpathPrefix>libDir</classpathPrefix>
+            			<mainClass>org.jzz.maventest.App</mainClass>
+            		</manifest>
+            	</archive>
+            </configuration>
+		</plugin>
+		
+		<!-- fatjar，将所有依赖jar包中的类（但类加载器的默认加载路径除外，即jre里面的）打包到当前jar包（大小约9MB），
+			省去了manifest文件中的依赖类配置，因为这种fatjar相当于没有第三方依赖
+			但默认没有生成主类信息，所以只能这么执行“java -cp jarName Mainclass” 
+		-->
+		<!-- <plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-shade-plugin</artifactId>
+			<version>3.2.0</version>
+			<executions>
+				<execution>
+					<phase>package</phase>
+					<goals>
+						<goal>shade</goal>
+					</goals>
+					<configuration>
+						<transformers>
+							<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<manifestEntries>
+									<mainClass>org.jzz.maventest.App</mainClass>
+									<X-Compile-Source-JDK>${java.version}</X-Compile-Source-JDK>
+                    				<X-Compile-Target-JDK>${java.version}</X-Compile-Target-JDK>
+                    			</manifestEntries>
+							</transformer>
+                        </transformers>
+					</configuration>
+				</execution>
+			</executions>
+		</plugin> -->
+	</plugins>  
+  </build>
+</project>
